@@ -2,10 +2,12 @@ module your_module_name
 
 go 1.20
 
-require github.com/couchbase/gocb/v2 v2.8.0
+require (
+	github.com/confluentinc/confluent-kafka-go v1.9.2
+	github.com/couchbase/gocb/v2 v2.8.0
+)
 
 require (
-	github.com/confluentinc/confluent-kafka-go v1.9.2 // indirect
 	github.com/couchbase/gocbcore/v10 v10.4.0 // indirect
 	github.com/couchbase/gocbcoreps v0.1.2 // indirect
 	github.com/couchbase/goprotostellar v1.0.2 // indirect

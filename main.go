@@ -5,62 +5,55 @@ import (
 	"log"
 	"os"
 
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/couchbase/gocb/v2"
 )
 
-// getEnv retrieves the value of the environment variable named by the key.
-// It returns the value, or the default value if the variable is not present.
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
-}
-
 func main() {
-	// Retrieve environment variables
-	bucketName := getEnv("COUCHBASE_BUCKET", "default_bucket")
-	username := getEnv("COUCHBASE_USERNAME", "default_username")
-	password := getEnv("COUCHBASE_PASSWORD", "default_password")
-	serverAddress := getEnv("COUCHBASE_SERVER_ADDRESS", "localhost")
+	// Retrieve connection strings from environment variables
+	couchbaseConnStr := os.Getenv("COUCHBASE_CONN_STR")
+	confluentConnStr := os.Getenv("CONFLUENT_CONN_STR")
 
-	// Connect to the Couchbase c    go mod download github.com/couchbase/gocb/v2luster
-	cluster, err := gocb.Connect(fmt.Sprintf("couchbase://%s", serverAddress), gocb.ClusterOptions{
-		Username: username,
-		Password: password,
+	if couchbaseConnStr == "" || confluentConnStr == "" {
+		log.Fatal("Environment variables COUCHBASE_CONN_STR and CONFLUENT_CONN_STR must be set")
+	}
+
+	// Check Couchbase connectivity
+	cluster, err := gocb.Connect(couchbaseConnStr, gocb.ClusterOptions{
+		Username: os.Getenv("COUCHBASE_USER"),
+		Password: os.Getenv("COUCHBASE_PASSWORD"),
 	})
 	if err != nil {
-		log.Fatalf("Failed to connect to Couchbase cluster: %v", err)
+		log.Fatalf("Failed to connect to Couchbase: %v", err)
 	}
+	defer cluster.Close(nil)
 
-	// Open the bucket
-	bucket := cluster.Bucket(bucketName)
-	err = bucket.WaitUntilReady(5, nil)
+	err = cluster.WaitUntilReady(0, nil)
 	if err != nil {
-		log.Fatalf("Failed to open bucket: %v", err)
+		log.Fatalf("Couchbase cluster not ready: %v", err)
 	}
+	fmt.Println("Successfully connected to Couchbase")
 
-	// Create a N1QL query to fetch the first 3 documents
-	query := fmt.Sprintf("SELECT * FROM `%s` LIMIT 3", bucketName)
-
-	// Execute the query
-	rows, err := cluster.Query(query, &gocb.QueryOptions{})
+	// Check Confluent connectivity
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": confluentConnStr})
 	if err != nil {
-		log.Fatalf("Failed to execute query: %v", err)
+		log.Fatalf("Failed to create Confluent producer: %v", err)
+	}
+	defer producer.Close()
+
+	// Produce a test message to check connectivity
+	testTopic := "test_topic"
+	testMessage := &kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &testTopic, Partition: kafka.PartitionAny},
+		Value:          []byte("test message"),
 	}
 
-	// Iterate through the rows and print the results
-	for rows.Next() {
-		var doc interface{}
-		err := rows.Row(&doc)
-		if err != nil {
-			log.Fatalf("Failed to read row: %v", err)
-		}
-		fmt.Printf("Document: %v\n", doc)
+	err = producer.Produce(testMessage, nil)
+	if err != nil {
+		log.Fatalf("Failed to produce test message to Confluent: %v", err)
 	}
 
-	// Check for any errors encountered during iteration
-	if err := rows.Err(); err != nil {
-		log.Fatalf("Query execution error: %v", err)
-	}
+	// Wait for message deliveries
+	producer.Flush(15 * 1000)
+	fmt.Println("Successfully connected to Confluent")
 }

@@ -34,7 +34,7 @@ func main() {
 	fmt.Printf("Confluent connection string: %s\n", confluentConnStr)
 
 	// Extract hostnames from connection strings
-	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbase://"), ",")[0] + ":8091"
+	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbase://"), ",")[0]
 	confluentHosts := strings.Split(confluentConnStr, ",")
 
 	// Check DNS resolution
@@ -56,7 +56,8 @@ func main() {
 
 	// Ping hosts
 	fmt.Println("Pinging hosts...")
-	if err := pingHost(couchbaseHost); err != nil {
+	couchbaseHostWithPort := couchbaseHost + ":8091"
+	if err := pingHost(couchbaseHostWithPort); err != nil {
 		log.Printf("Failed to ping Couchbase host: %v", err)
 	} else {
 		fmt.Println("Successfully pinged Couchbase host")

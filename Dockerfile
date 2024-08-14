@@ -15,12 +15,14 @@ COPY . .
 RUN go mod tidy
 RUN go build -o main .
 
-
 # Stage 2: Create a smaller image with the built application
 FROM debian:bullseye-slim AS final
 
 # Set the working directory inside the container
 WORKDIR /app
+
+# Update and upgrade packages
+RUN apt-get update && apt-get upgrade -y && apt-get clean
 
 # Copy the executable from the builder stage
 COPY --from=builder /app/main .

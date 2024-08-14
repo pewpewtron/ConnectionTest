@@ -15,7 +15,7 @@ COPY . .
 RUN go build -o main .
 
 # Use a lightweight base image for the final stage
-FROM alpine:latest
+FROM alpine:latest as production
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -28,4 +28,4 @@ RUN chmod +x /app/main
 # EXPOSE 8080
 
 # Command to run the executable
-CMD ["/app/main"]
+ENTRYPOINT ["/app/main"]

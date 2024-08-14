@@ -1,4 +1,4 @@
-Explanation:
+READ ME:
 1. Environment Variables: The connection strings for Couchbase and Confluent are retrieved from environment variables.
 2. Couchbase Connectivity: The program connects to Couchbase using the gocb package and checks if the cluster is ready.
 3. Confluent Connectivity: The program creates a Kafka producer using the confluent-kafka-go package and sends a test message to verify connectivity.

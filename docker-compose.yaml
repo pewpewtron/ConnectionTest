@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: <your-registry>/connection-test:0.02
+    environment:
+      - COUCHBASE_CONN_STR=your-value
+      - COUCHBASE_BUCKET=your-value
+      - COUCHBASE_USER=your-value
+      - COUCHBASE_PASSWORD=your-value
+      - CONFLUENT_CONN_STR=your-value

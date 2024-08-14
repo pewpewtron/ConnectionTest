@@ -18,21 +18,27 @@ func main() {
 		log.Fatal("Environment variables COUCHBASE_CONN_STR and CONFLUENT_CONN_STR must be set")
 	}
 
+	// Print connection strings
+	fmt.Printf("Couchbase connection string: %s\n", couchbaseConnStr)
+	fmt.Printf("Confluent connection string: %s\n", confluentConnStr)
+
 	// Check Couchbase connectivity
 	cluster, err := gocb.Connect(couchbaseConnStr, gocb.ClusterOptions{
 		Username: os.Getenv("COUCHBASE_USER"),
 		Password: os.Getenv("COUCHBASE_PASSWORD"),
 	})
 	if err != nil {
-		log.Fatalf("Failed to connect to Couchbase: %v", err)
-	}
-	defer cluster.Close(nil)
+		log.Printf("Failed to connect to Couchbase: %v", err)
+	} else {
+		defer cluster.Close(nil)
 
-	err = cluster.WaitUntilReady(0, nil)
-	if err != nil {
-		log.Fatalf("Couchbase cluster not ready: %v", err)
+		err = cluster.WaitUntilReady(0, nil)
+		if err != nil {
+			log.Printf("Couchbase cluster not ready: %v", err)
+		} else {
+			fmt.Println("Successfully connected to Couchbase")
+		}
 	}
-	fmt.Println("Successfully connected to Couchbase")
 
 	// Check Confluent connectivity
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": confluentConnStr})

@@ -1,5 +1,5 @@
-# Use the official Golang image as the base image for building
-FROM golang:1.22.6-bullseye AS builder
+# Use the official Golang image as the base image
+FROM golang:1.22.6-bullseye
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -12,20 +12,11 @@ RUN go mod download
 COPY . .
 
 # Build the Go application
+RUN go mod tidy
 RUN go build -o main .
-
-# Use a lightweight base image for the final stage
-FROM alpine:latest as production
-
-# Set the working directory inside the container
-WORKDIR /app
-
-# Copy the built executable from the builder stage
-COPY --from=builder /app/main /app/main
-RUN chmod +x /app/main
 
 # Expose any ports the app is running on (if applicable)
 # EXPOSE 8080
 
 # Command to run the executable
-ENTRYPOINT ["/app/main"]
+CMD ["./main"]

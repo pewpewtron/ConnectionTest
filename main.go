@@ -3,11 +3,22 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
+	"strings"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/couchbase/gocb/v2"
 )
+
+func pingHost(host string) error {
+	conn, err := net.Dial("tcp", host)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	return nil
+}
 
 func main() {
 	// Retrieve connection strings from environment variables
@@ -21,6 +32,27 @@ func main() {
 	// Print connection strings
 	fmt.Printf("Couchbase connection string: %s\n", couchbaseConnStr)
 	fmt.Printf("Confluent connection string: %s\n", confluentConnStr)
+
+	// Check if connection is resolve from dns
+	// Extract hostnames from connection strings
+	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbase://"), ",")[0]
+	confluentHost := strings.Split(confluentConnStr, ",")[0]
+
+	// Check DNS resolution
+	if _, err := net.LookupHost(couchbaseHost); err != nil {
+		log.Fatalf("Failed to resolve Couchbase host: %v", err)
+	}
+	if _, err := net.LookupHost(confluentHost); err != nil {
+		log.Fatalf("Failed to resolve Confluent host: %v", err)
+	}
+
+	// Ping hosts
+	if err := pingHost(couchbaseHost); err != nil {
+		log.Fatalf("Failed to ping Couchbase host: %v", err)
+	}
+	if err := pingHost(confluentHost); err != nil {
+		log.Fatalf("Failed to ping Confluent host: %v", err)
+	}
 
 	// Check Couchbase connectivity
 	cluster, err := gocb.Connect(couchbaseConnStr, gocb.ClusterOptions{

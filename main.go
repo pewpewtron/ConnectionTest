@@ -34,7 +34,7 @@ func main() {
 	fmt.Printf("Confluent connection string: %s\n", confluentConnStr)
 
 	// Extract hostnames from connection strings
-	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbase://"), ",")[0]
+	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbase://"), ",")[0] + ":8091"
 	confluentHosts := strings.Split(confluentConnStr, ",")
 
 	// Check DNS resolution
@@ -46,10 +46,11 @@ func main() {
 	}
 
 	for _, host := range confluentHosts {
-		if _, err := net.LookupHost(host); err != nil {
-			log.Printf("Failed to resolve Confluent host %s: %v", host, err)
+		hostname := strings.Split(host, ":")[0]
+		if _, err := net.LookupHost(hostname); err != nil {
+			log.Printf("Failed to resolve Confluent host %s: %v", hostname, err)
 		} else {
-			fmt.Printf("Successfully resolved Confluent host %s\n", host)
+			fmt.Printf("Successfully resolved Confluent host %s\n", hostname)
 		}
 	}
 

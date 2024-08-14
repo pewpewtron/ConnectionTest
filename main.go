@@ -38,6 +38,7 @@ func main() {
 	confluentHost := strings.Split(confluentConnStr, ",")[0]
 
 	// Check DNS resolution
+	fmt.Println("Checking DNS resolution...")
 	if _, err := net.LookupHost(couchbaseHost); err != nil {
 		log.Printf("Failed to resolve Couchbase host: %v", err)
 	} else {
@@ -51,6 +52,7 @@ func main() {
 	}
 
 	// Ping hosts
+	fmt.Println("Pinging hosts...")
 	if err := pingHost(couchbaseHost); err != nil {
 		log.Printf("Failed to ping Couchbase host: %v", err)
 	} else {
@@ -64,6 +66,7 @@ func main() {
 	}
 
 	// Check Couchbase connectivity
+	fmt.Println("Checking Couchbase connectivity...")
 	cluster, err := gocb.Connect(couchbaseConnStr, gocb.ClusterOptions{
 		Username: os.Getenv("COUCHBASE_USER"),
 		Password: os.Getenv("COUCHBASE_PASSWORD"),
@@ -82,6 +85,7 @@ func main() {
 	}
 
 	// Check Confluent connectivity
+	fmt.Println("Checking Confluent connectivity...")
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": confluentConnStr})
 	if err != nil {
 		log.Printf("Failed to create Confluent producer: %v", err)

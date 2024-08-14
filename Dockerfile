@@ -21,11 +21,11 @@ FROM alpine:latest
 WORKDIR /app
 
 # Copy the built executable from the builder stage
-COPY --from=builder /app/main .
-RUN chmod +x main
+COPY --from=builder /app/main /app/main
+RUN chmod +x /app/main
 
 # Expose any ports the app is running on (if applicable)
 # EXPOSE 8080
 
 # Command to run the executable
-CMD ["./main"]
+CMD ["/app/main"]

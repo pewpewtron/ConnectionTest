@@ -35,7 +35,7 @@ func main() {
 
 	// Extract hostnames from connection strings
 	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbase://"), ",")[0]
-	confluentHost := strings.Split(confluentConnStr, ",")[0]
+	confluentHosts := strings.Split(confluentConnStr, ",")
 
 	// Check DNS resolution
 	fmt.Println("Checking DNS resolution...")
@@ -45,10 +45,12 @@ func main() {
 		fmt.Println("Successfully resolved Couchbase host")
 	}
 
-	if _, err := net.LookupHost(confluentHost); err != nil {
-		log.Printf("Failed to resolve Confluent host: %v", err)
-	} else {
-		fmt.Println("Successfully resolved Confluent host")
+	for _, host := range confluentHosts {
+		if _, err := net.LookupHost(host); err != nil {
+			log.Printf("Failed to resolve Confluent host %s: %v", host, err)
+		} else {
+			fmt.Printf("Successfully resolved Confluent host %s\n", host)
+		}
 	}
 
 	// Ping hosts
@@ -59,10 +61,12 @@ func main() {
 		fmt.Println("Successfully pinged Couchbase host")
 	}
 
-	if err := pingHost(confluentHost); err != nil {
-		log.Printf("Failed to ping Confluent host: %v", err)
-	} else {
-		fmt.Println("Successfully pinged Confluent host")
+	for _, host := range confluentHosts {
+		if err := pingHost(host); err != nil {
+			log.Printf("Failed to ping Confluent host %s: %v", host, err)
+		} else {
+			fmt.Printf("Successfully pinged Confluent host %s\n", host)
+		}
 	}
 
 	// Check Couchbase connectivity

@@ -22,6 +22,7 @@ WORKDIR /app
 
 # Copy the built executable from the builder stage
 COPY --from=builder /app/main .
+RUN chmod +x main
 
 # Expose any ports the app is running on (if applicable)
 # EXPOSE 8080

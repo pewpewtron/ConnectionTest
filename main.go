@@ -33,25 +33,34 @@ func main() {
 	fmt.Printf("Couchbase connection string: %s\n", couchbaseConnStr)
 	fmt.Printf("Confluent connection string: %s\n", confluentConnStr)
 
-	// Check if connection is resolve from dns
 	// Extract hostnames from connection strings
 	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbase://"), ",")[0]
 	confluentHost := strings.Split(confluentConnStr, ",")[0]
 
 	// Check DNS resolution
 	if _, err := net.LookupHost(couchbaseHost); err != nil {
-		log.Fatalf("Failed to resolve Couchbase host: %v", err)
+		log.Printf("Failed to resolve Couchbase host: %v", err)
+	} else {
+		fmt.Println("Successfully resolved Couchbase host")
 	}
+
 	if _, err := net.LookupHost(confluentHost); err != nil {
-		log.Fatalf("Failed to resolve Confluent host: %v", err)
+		log.Printf("Failed to resolve Confluent host: %v", err)
+	} else {
+		fmt.Println("Successfully resolved Confluent host")
 	}
 
 	// Ping hosts
 	if err := pingHost(couchbaseHost); err != nil {
-		log.Fatalf("Failed to ping Couchbase host: %v", err)
+		log.Printf("Failed to ping Couchbase host: %v", err)
+	} else {
+		fmt.Println("Successfully pinged Couchbase host")
 	}
+
 	if err := pingHost(confluentHost); err != nil {
-		log.Fatalf("Failed to ping Confluent host: %v", err)
+		log.Printf("Failed to ping Confluent host: %v", err)
+	} else {
+		fmt.Println("Successfully pinged Confluent host")
 	}
 
 	// Check Couchbase connectivity
@@ -75,23 +84,24 @@ func main() {
 	// Check Confluent connectivity
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": confluentConnStr})
 	if err != nil {
-		log.Fatalf("Failed to create Confluent producer: %v", err)
-	}
-	defer producer.Close()
+		log.Printf("Failed to create Confluent producer: %v", err)
+	} else {
+		defer producer.Close()
 
-	// Produce a test message to check connectivity
-	testTopic := "test_topic"
-	testMessage := &kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &testTopic, Partition: kafka.PartitionAny},
-		Value:          []byte("test message"),
-	}
+		// Produce a test message to check connectivity
+		testTopic := "test_topic"
+		testMessage := &kafka.Message{
+			TopicPartition: kafka.TopicPartition{Topic: &testTopic, Partition: kafka.PartitionAny},
+			Value:          []byte("test message"),
+		}
 
-	err = producer.Produce(testMessage, nil)
-	if err != nil {
-		log.Fatalf("Failed to produce test message to Confluent: %v", err)
+		err = producer.Produce(testMessage, nil)
+		if err != nil {
+			log.Printf("Failed to produce test message to Confluent: %v", err)
+		} else {
+			// Wait for message deliveries
+			producer.Flush(15 * 1000)
+			fmt.Println("Successfully connected to Confluent")
+		}
 	}
-
-	// Wait for message deliveries
-	producer.Flush(15 * 1000)
-	fmt.Println("Successfully connected to Confluent")
 }

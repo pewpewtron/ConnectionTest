@@ -22,7 +22,9 @@ FROM debian:bullseye-slim AS final
 WORKDIR /app
 
 # Update and upgrade packages
-RUN apt-get update && apt-get upgrade -y && apt-get clean
+RUN apt-get update && apt-get upgrade -y && apt-get clean && apt-get install -y curl
+RUN curl -L https://github.com/couchbaselabs/sdk-doctor/releases/download/v1.0.8/sdk-doctor-linux -o sdk-doctor \
+    && chmod +x sdk-doctor
 
 # Copy the executable from the builder stage
 COPY --from=builder /app/main .

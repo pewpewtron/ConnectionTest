@@ -5,10 +5,10 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/couchbase/gocb/v2"
 )
 
 func pingHost(host string) error {
@@ -24,6 +24,9 @@ func main() {
 	// Retrieve connection strings from environment variables
 	couchbaseConnStr := os.Getenv("COUCHBASE_CONN_STR")
 	confluentConnStr := os.Getenv("CONFLUENT_CONN_STR")
+	Username := os.Getenv("COUCHBASE_USER")
+	Password := os.Getenv("COUCHBASE_PASSWORD")
+	trailingPath := os.Getenv("COUCHBASE_BUCKET")
 
 	if couchbaseConnStr == "" || confluentConnStr == "" {
 		log.Fatal("Environment variables COUCHBASE_CONN_STR and CONFLUENT_CONN_STR must be set")
@@ -70,26 +73,6 @@ func main() {
 			fmt.Printf("Successfully pinged Confluent host %s\n", host)
 		}
 	}
-
-	// Check Couchbase connectivity
-	fmt.Println("Checking Couchbase connectivity...")
-	cluster, err := gocb.Connect(couchbaseConnStr, gocb.ClusterOptions{
-		Username: os.Getenv("COUCHBASE_USER"),
-		Password: os.Getenv("COUCHBASE_PASSWORD"),
-	})
-	if err != nil {
-		log.Printf("Failed to connect to Couchbase: %v", err)
-	} else {
-		defer cluster.Close(nil)
-
-		err = cluster.WaitUntilReady(0, nil)
-		if err != nil {
-			log.Printf("Couchbase cluster not ready: %v", err)
-		} else {
-			fmt.Println("Successfully connected to Couchbase")
-		}
-	}
-
 	// Check Confluent connectivity
 	fmt.Println("Checking Confluent connectivity...")
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": confluentConnStr})
@@ -114,4 +97,21 @@ func main() {
 			fmt.Println("Successfully connected to Confluent")
 		}
 	}
+
+	// Check Couchbase connectivity
+	fmt.Println("Checking Couchbase connectivity...")
+
+	fullConnectionURL := fmt.Sprintf("%s/%s", couchbaseConnStr, trailingPath)
+
+	cmd := exec.Command("./sdk-doctor-macos", "diagnose", "-u", Username, "-p", Password, fullConnectionURL)
+
+	// Capture the output
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Failed to run Couchbase diagnosis: %v", err)
+		return
+	}
+
+	// Print the output
+	fmt.Printf("Couchbase diagnosis output:\n%s\n", string(output))
 }

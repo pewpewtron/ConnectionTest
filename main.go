@@ -34,7 +34,7 @@ func main() {
 	fmt.Printf("Confluent connection string: %s\n", confluentConnStr)
 
 	// Extract hostnames from connection strings
-	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbase://"), ",")[0]
+	couchbaseHost := strings.Split(strings.TrimPrefix(couchbaseConnStr, "couchbases://"), ",")[0]
 	confluentHosts := strings.Split(confluentConnStr, ",")
 
 	// Check DNS resolution

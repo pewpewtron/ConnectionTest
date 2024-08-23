@@ -1,0 +1,16 @@
+stages:
+  - build
+
+build:
+  only:
+    - tags
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t my-docker-image .
+    # - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    # - docker push my-docker-image
+  after_script:
+    - docker images
